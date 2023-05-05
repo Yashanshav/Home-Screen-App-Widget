@@ -1,13 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:homescreen_widget/new_screen.dart';
+import 'package:get/get.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HomeWidget.registerBackgroundCallback(backgroundCallback);
   runApp(const MyApp());
 }
 
 // Called when Doing Background Work initiated from Widget
+@pragma("vm:entry-point")
 Future<void> backgroundCallback(Uri? uri) async {
   if (uri?.host == 'updatecounter') {
     int counter = 0;
@@ -24,17 +29,68 @@ Future<void> backgroundCallback(Uri? uri) async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // HomeWidget.initiallyLaunchedFromHomeWidget().then((Uri? uri) {
+    //   if (uri?.host == 'launchapp') {
+    //     Get.toNamed('/homescreen');
+    //   } else if (uri?.host == 'newscreen') {
+    //     Get.toNamed('/newscreen');
+    //   }
+    // });
+    HomeWidget.initiallyLaunchedFromHomeWidget().then((Uri? uri) {
+      if (uri?.host == 'launchapp') {
+        Get.toNamed('/homescreen');
+      } else if (uri?.host == 'newscreen') {
+        Get.toNamed('/newscreen');
+      }
+    });
+    HomeWidget.widgetClicked.listen((Uri? uri) {
+      if (uri?.host == "newscreen") {
+        // _uriVal = "gone to new screen";
+        Get.toNamed('/newscreen');
+      } else if (uri?.host == "launchapp") {
+        Get.toNamed('/homescreen');
+        // _uriVal = "gone to home screen";
+        // loadData();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      initialRoute: '/homescreen',
+      routes: {
+        '/homescreen': (context) => const MyHomePage(title: 'My Widget'),
+        '/newscreen': (context) => const new_screen(),
+        '/newroute': (context) => const NewRoute(),
+      },
+      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
+}
+
+class NewRoute extends StatelessWidget {
+  const NewRoute({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Text("this is the new route screen."),
     );
   }
 }
@@ -49,11 +105,28 @@ class MyHomePage extends StatefulWidget {
 
 class MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  String _uriVal = "no value";
 
   @override
   void initState() {
     super.initState();
-    HomeWidget.widgetClicked.listen((Uri? uri) => loadData());
+    // HomeWidget.initiallyLaunchedFromHomeWidget().then((Uri? uri) {
+    //   if (uri?.host == 'launchapp') {
+    //     Get.toNamed('/homescreen');
+    //   } else if (uri?.host == 'newscreen') {
+    //     Get.toNamed('/newscreen');
+    //   }
+    // });
+    // HomeWidget.widgetClicked.listen((Uri? uri) {
+    //   if (uri?.host == "newscreen") {
+    //     _uriVal = "gone to new screen";
+    //     Get.toNamed('/newscreen');
+    //   } else if (uri?.host == "launchapp") {
+    //     Get.toNamed('/homescreen');
+    //     _uriVal = "gone to home screen";
+    //     // loadData();
+    //   }
+    // });
     loadData(); // This will load data from widget every time app is opened
   }
 
@@ -88,9 +161,7 @@ class MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
+            Text(_uriVal),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
@@ -102,7 +173,7 @@ class MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), 
+      ),
     );
   }
 }
